@@ -9,6 +9,13 @@ delimited keys.
 $ npm install flat
 ```
 
+## Bundle
+
+```bash
+$ npm install -g browserify
+$ browserify index.js -o bundle.js
+```
+
 ## Methods
 
 ### flatten(original, options)

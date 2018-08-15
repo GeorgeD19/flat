@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+    <script src="../bundle.js"></script>
+  </head>
+  <body>
+      Check your browser console log.
+    <script>
+        console.log(window.flatten({
+            key1: {
+                keyA: 'valueI'
+            },
+            key2: {
+                keyB: 'valueII'
+            },
+            key3: { a: { b: { c: 2 } } }
+        }));
+        console.log(window.unflatten({
+            'three.levels.deep': 42,
+            'three.levels': {
+                nested: true
+            }
+        }));
+        console.log(window.flatten({
+            this: [
+                { contains: 'arrays' },
+                { preserving: {
+                    them: 'for you'
+                }}
+            ]
+        }, {
+            safe: true
+        }));
+        console.log(window.unflatten({
+            'hello.you.0': 'ipsum',
+            'hello.you.1': 'lorem',
+            'hello.other.world': 'foo'
+        }, { object: true }));
+        console.log(window.unflatten({
+            'TRAVIS': 'true',
+            'TRAVIS_DIR': '/home/travis/build/kvz/environmental'
+        }, { overwrite: true }));
+        console.log(window.flatten({
+            key1: {
+                keyA: 'valueI'
+            },
+            key2: {
+                keyB: 'valueII'
+            },
+            key3: { a: { b: { c: 2 } } }
+        }, { maxDepth: 2 }));
+    </script>
+  </body>
+</html>

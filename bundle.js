@@ -5,6 +5,10 @@ module.exports = flatten
 flatten.flatten = flatten
 flatten.unflatten = unflatten
 
+window.flatten = function(target, opts) {
+  return flatten(target, opts);
+};
+
 function flatten (target, opts) {
   opts = opts || {}
 
@@ -41,6 +45,10 @@ function flatten (target, opts) {
 
   return output
 }
+
+window.unflatten = function(target, opts) {
+  return unflatten(target, opts);
+};
 
 function unflatten (target, opts) {
   opts = opts || {}
