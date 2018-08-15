@@ -1,39 +1,37 @@
-var isBuffer = require('is-buffer')
-
-module.exports = flatten
+var flat = module.exports = flatten
 flatten.flatten = flatten
 flatten.unflatten = unflatten
 
-window.flatten = function(target, opts) {
-  return flatten(target, opts);
-};
-
-function flatten (target, opts) {
+function flatten(target, opts) {
   opts = opts || {}
 
   var delimiter = opts.delimiter || '.'
   var maxDepth = opts.maxDepth
+  var currentDepth = 1
   var output = {}
 
-  function step (object, prev, currentDepth) {
-    currentDepth = currentDepth || 1
-    Object.keys(object).forEach(function (key) {
+  function step(object, prev) {
+    Object.keys(object).forEach(function(key) {
       var value = object[key]
       var isarray = opts.safe && Array.isArray(value)
       var type = Object.prototype.toString.call(value)
       var isbuffer = isBuffer(value)
       var isobject = (
-        type === '[object Object]' ||
-        type === '[object Array]'
+        type === "[object Object]" ||
+        type === "[object Array]"
       )
 
       var newKey = prev
-        ? prev + delimiter + key
+        ? prev + delimit(delimiter, key)
         : key
 
-      if (!isarray && !isbuffer && isobject && Object.keys(value).length &&
-        (!opts.maxDepth || currentDepth < maxDepth)) {
-        return step(value, newKey, currentDepth + 1)
+      if (!opts.maxDepth) {
+        maxDepth = currentDepth + 1;
+      }
+
+      if (!isarray && !isbuffer && isobject && Object.keys(value).length && currentDepth < maxDepth) {
+        ++currentDepth
+        return step(value, newKey)
       }
 
       output[newKey] = value
@@ -45,11 +43,7 @@ function flatten (target, opts) {
   return output
 }
 
-window.unflatten = function(target, opts) {
-  return unflatten(target, opts);
-};
-
-function unflatten (target, opts) {
+function unflatten(target, opts) {
   opts = opts || {}
 
   var delimiter = opts.delimiter || '.'
@@ -63,23 +57,18 @@ function unflatten (target, opts) {
 
   // safely ensure that the key is
   // an integer.
-  function getkey (key) {
+  function getkey(key) {
     var parsedKey = Number(key)
 
     return (
       isNaN(parsedKey) ||
-      key.indexOf('.') !== -1 ||
-      opts.object
+      key.indexOf('.') !== -1
     ) ? key
       : parsedKey
   }
 
-  var sortedKeys = Object.keys(target).sort(function (keyA, keyB) {
-    return keyA.length - keyB.length
-  })
-
-  sortedKeys.forEach(function (key) {
-    var split = key.split(delimiter)
+  Object.keys(target).forEach(function(key) {
+    var split = splitkey(key, delimiter)
     var key1 = getkey(split.shift())
     var key2 = getkey(split[0])
     var recipient = result
@@ -87,16 +76,11 @@ function unflatten (target, opts) {
     while (key2 !== undefined) {
       var type = Object.prototype.toString.call(recipient[key1])
       var isobject = (
-        type === '[object Object]' ||
-        type === '[object Array]'
+        type === "[object Object]" ||
+        type === "[object Array]"
       )
 
-      // do not write over falsey, non-undefined values if overwrite is false
-      if (!overwrite && !isobject && typeof recipient[key1] !== 'undefined') {
-        return
-      }
-
-      if ((overwrite && !isobject) || (!overwrite && recipient[key1] == null)) {
+      if ((overwrite && !isobject) || (!overwrite && recipient[key1] === undefined)) {
         recipient[key1] = (
           typeof key2 === 'number' &&
           !opts.object ? [] : {}
@@ -115,4 +99,40 @@ function unflatten (target, opts) {
   })
 
   return result
+}
+
+function isBuffer(value) {
+  if (typeof Buffer === 'undefined') return false
+  return Buffer.isBuffer(value)
+}
+
+// add delimiters to a key
+// 1-2 characters
+// 2 characters will be treated as brackets 
+// ex. delimit('[]', 'hi') = '[hi]'
+function delimit(delimiter, key) {
+  if (delimiter.length == 1) {
+    return delimiter + key
+  }
+  else {
+    var delimiters = delimiter.split('')
+    return delimiters[0] + key + delimiters[1]
+  }
+}
+
+// split a key by a delimiter(s)
+// 1 or 2 characters
+// 2 characters treated as brackets
+function splitkey(key, delimiter){
+  if (delimiter.length == 1) {
+    return key.split(delimiter)
+  }
+  else if (delimiter.length == 2) {
+    var delimiters = delimiter.split('')
+    var regex = new RegExp('\\'+delimiters[1] , 'g')
+    //remove trailing bracket from string
+    var result = key.replace(regex, '')
+    //split on leading bracket
+    return (result.split(delimiters[0]))
+  }
 }
